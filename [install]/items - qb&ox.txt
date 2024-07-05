@@ -1,0 +1,160 @@
+Ox:
+
+	["apple"] = {
+		label = "Apple",
+		weight = 500,
+		stack = true,
+		close = true,
+		description = "A crisp and juicy fruit.",
+		client = {
+			image = "apple.png",
+		}
+	},
+	["pear"] = {
+		label = "Pear",
+		weight = 400,
+		stack = true,
+		close = true,
+		description = "Sweet and slightly grainy.",
+		client = {
+			image = "pear.png",
+		}
+	},
+	["cherry"] = {
+		label = "Cherry",
+		weight = 30,
+		stack = true,
+		close = true,
+		description = "Small, round, and juicy.",
+		client = {
+			image = "cherry.png",
+		}
+	},
+	["peach"] = {
+		label = "Peach",
+		weight = 300,
+		stack = true,
+		close = true,
+		description = "Soft, juicy, and sweet.",
+		client = {
+			image = "peach.png",
+		}
+	},
+	["banana"] = {
+		label = "Banana",
+		weight = 200,
+		stack = true,
+		close = true,
+		description = "Sweet and creamy.",
+		client = {
+			image = "banana.png",
+		}
+	},
+	["orange"] = {
+		label = "Orange",
+		weight = 300,
+		stack = true,
+		close = true,
+		description = "Sweet and citrusy.",
+		client = {
+			image = "orange.png",
+		}
+	},
+	["strawberry"] = {
+		label = "Strawberry",
+		weight = 50,
+		stack = true,
+		close = true,
+		description = "Sweet and juicy.",
+		client = {
+			image = "strawberry.png",
+		}
+	},
+	["blueberry"] = {
+		label = "Blueberry",
+		weight = 40,
+		stack = true,
+		close = true,
+		description = "Small, round, and sweet.",
+		client = {
+			image = "blueberry.png",
+		}
+	},
+	["grape"] = {
+		label = "Grape",
+		weight = 50,
+		stack = true,
+		close = true,
+		description = "Sweet and juicy.",
+		client = {
+			image = "grape.png",
+		}
+	},
+	["kiwi"] = {
+		label = "Kiwi",
+		weight = 100,
+		stack = true,
+		close = true,
+		description = "Tangy and sweet.",
+		client = {
+			image = "kiwi.png",
+		}
+	},
+	["lemon"] = {
+		label = "Lemon",
+		weight = 80,
+		stack = true,
+		close = true,
+		description = "Sour and tangy.",
+		client = {
+			image = "lemon.png",
+		}
+	},
+	["mango"] = {
+		label = "Mango",
+		weight = 600,
+		stack = true,
+		close = true,
+		description = "Sweet and tropical.",
+		client = {
+			image = "mango.png",
+		}
+	},
+	["watermelon"] = {
+		label = "Watermelon",
+		weight = 1000,
+		stack = true,
+		close = true,
+		description = "Juicy and refreshing.",
+		client = {
+			image = "watermelon.png",
+		}
+	},
+	["milk"] = {
+		label = "Milk",
+		weight = 1000,
+		stack = true,
+		close = true,
+		description = "Cowy... very Cowy...",
+		client = {
+			image = "milk.png",
+		}
+	},
+
+qb_inventory:
+
+-- Fruits
+apple = { name = 'apple', label = 'Apple', weight = 500, type = 'item', image = 'apple.png', unique = false, useable = false, shouldClose = true, description = 'A crisp and juicy fruit.' },
+pear = { name = 'pear', label = 'Pear', weight = 400, type = 'item', image = 'pear.png', unique = false, useable = false, shouldClose = true, description = 'Sweet and slightly grainy.' },
+cherry = { name = 'cherry', label = 'Cherry', weight = 30, type = 'item', image = 'cherry.png', unique = false, useable = false, shouldClose = true, description = 'Small, round, and juicy.' },
+peach = { name = 'peach', label = 'Peach', weight = 300, type = 'item', image = 'peach.png', unique = false, useable = false, shouldClose = true, description = 'Soft, juicy, and sweet.' },
+banana = { name = 'banana', label = 'Banana', weight = 200, type = 'item', image = 'banana.png', unique = false, useable = false, shouldClose = true, description = 'Sweet and creamy.' },
+orange = { name = 'orange', label = 'Orange', weight = 300, type = 'item', image = 'orange.png', unique = false, useable = false, shouldClose = true, description = 'Sweet and citrusy.' },
+strawberry = { name = 'strawberry', label = 'Strawberry', weight = 50, type = 'item', image = 'strawberry.png', unique = false, useable = false, shouldClose = true, description = 'Sweet and juicy.' },
+blueberry = { name = 'blueberry', label = 'Blueberry', weight = 40, type = 'item', image = 'blueberry.png', unique = false, useable = false, shouldClose = true, description = 'Small, round, and sweet.' },
+grape = { name = 'grape', label = 'Grape', weight = 50, type = 'item', image = 'grape.png', unique = false, useable = false, shouldClose = true, description = 'Sweet and juicy.' },
+kiwi = { name = 'kiwi', label = 'Kiwi', weight = 100, type = 'item', image = 'kiwi.png', unique = false, useable = false, shouldClose = true, description = 'Tangy and sweet.' },
+lemon = { name = 'lemon', label = 'Lemon', weight = 80, type = 'item', image = 'lemon.png', unique = false, useable = false, shouldClose = true, description = 'Sour and tangy.' },
+mango = { name = 'mango', label = 'Mango', weight = 600, type = 'item', image = 'mango.png', unique = false, useable = false, shouldClose = true, description = 'Sweet and tropical.' },
+watermelon = { name = 'watermelon', label = 'Watermelon', weight = 1000, type = 'item', image = 'watermelon.png', unique = false, useable = false, shouldClose = true, description = 'Juicy and refreshing.' },
+milk = { name = 'milk', label = 'Milk', weight = 1000, type = 'item', image = 'milk.png', unique = false, useable = false, shouldClose = true, description = 'Cowy... very Cowy...' }
