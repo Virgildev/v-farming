@@ -1,46 +1,48 @@
-local QBCore = exports['qb-core']:GetCoreObject()
+local function IsPlayerInRectangularZone(playerCoords, targetCoords, size, rotation)
+    local rad = math.rad(rotation)
+    local halfWidth = size.x / 2
+    local halfHeight = size.y / 2
+    local tx = playerCoords.x - targetCoords.x
+    local ty = playerCoords.y - targetCoords.y
+    local rotatedX = tx * math.cos(rad) + ty * math.sin(rad)
+    local rotatedY = -tx * math.sin(rad) + ty * math.cos(rad)
+    local isInside = math.abs(rotatedX) <= halfWidth and math.abs(rotatedY) <= halfHeight
+    
+    return isInside
+end
+
+local function IsPlayerNearTarget(src, targetCoords, targetSize, targetRotation)
+    local playerCoords = GetEntityCoords(GetPlayerPed(src))
+
+    return IsPlayerInRectangularZone(playerCoords, targetCoords, targetSize, targetRotation)
+end
 
 RegisterServerEvent('farming:giveItem')
-AddEventHandler('farming:giveItem', function(item, amount)
+AddEventHandler('farming:giveItem', function(item, amount, targetCoords, targetSize, targetRotation)
     local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    Player.Functions.AddItem(item, amount)
-    if Config.Notify == 'qb' then
-        TriggerClientEvent('QBCore:Notify', src, 'You picked a ' .. item, 'success')
-    else 
-        local data = {
-            title = 'You picked a ' .. item,
-            type = 'success',
-            duration = 9000,
-            position = 'top-right'
-        }
-        TriggerClientEvent('ox_lib:notify', src, data)
+
+    if type(targetCoords) == 'table' and targetCoords.x and targetCoords.y and targetCoords.z then
+        targetCoords = vector3(targetCoords.x, targetCoords.y, targetCoords.z)
+    elseif type(targetCoords) ~= 'vector3' then
+        print('Error: targetCoords is not a valid vector3. Type:', type(targetCoords), 'Value:', targetCoords)
+        return
     end
-end)
 
-RegisterServerEvent('farming:sellFruit')
-AddEventHandler('farming:sellFruit', function(fruit, amount)
-    print('server reached')
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    local item = Player.Functions.GetItemByName(fruit)
+    targetSize = targetSize or vec3(120.0, 120.0, 15.0)
 
-    if item then
-        if item.amount >= amount then
-            local price = Config.Items[fruit].price
-            local total = amount * price
+    print('Checking if player is within target area...')
+    local isNear = IsPlayerNearTarget(src, targetCoords, targetSize, targetRotation)
+    print('Is Player Near Target:', isNear)
 
-            Player.Functions.RemoveItem(fruit, amount)
-            Player.Functions.AddMoney('cash', total)
-
-            local sellMsg = 'Sold ' .. amount .. ' ' .. fruit .. ' for $' .. total
-
+    if isNear then
+        local success = exports.ox_inventory:AddItem(src, item, amount)
+        
+        if success then
             if Config.Notify == 'qb' then
-                TriggerClientEvent('QBCore:Notify', src, sellMsg, 'success')
-            else
+                TriggerClientEvent('QBCore:Notify', src, 'You picked a ' .. item, 'success')
+            else 
                 local data = {
-                    title = 'Sold ' .. amount .. ' ' .. fruit,
-                    description = 'for $' .. total,
+                    title = 'You picked a ' .. item,
                     type = 'success',
                     duration = 9000,
                     position = 'top-right'
@@ -48,22 +50,65 @@ AddEventHandler('farming:sellFruit', function(fruit, amount)
                 TriggerClientEvent('ox_lib:notify', src, data)
             end
         else
-            local errMsg = 'You don\'t have enough ' .. fruit .. 's'
-
-            if Config.Notify == 'qb' then
-                TriggerClientEvent('QBCore:Notify', src, errMsg, 'error')
-            else
-                local data = {
-                    title = errMsg,
-                    type = 'error',
-                    duration = 3000,
-                    position = 'top-right'
-                }
-                TriggerClientEvent('ox_lib:notify', src, data)
-            end
+            print('Failed to add item to player inventory.')
         end
     else
-        local errMsg = 'You don\'t have any ' .. fruit .. 's'
+        DropPlayer(src, 'Kicked for attempting to exploit: Farming action triggered too far from target.')
+    end
+end)
+
+RegisterServerEvent('farming:sellFruit')
+AddEventHandler('farming:sellFruit', function(fruit, amount, targetCoords)
+    local src = source
+    local item = exports.ox_inventory:GetItem(src, fruit)
+
+    if item and item.count >= amount then
+        local price = Config.ItemsFarming[fruit].price
+        local total = amount * price
+
+        local success = exports.ox_inventory:RemoveItem(src, fruit, amount)
+
+        if success then
+            local addMoneySuccess = exports.ox_inventory:AddMoney(src, 'cash', total)
+            if addMoneySuccess and Config.useMyResturantWarehouseScript then
+                MySQL.Async.fetchAll('SELECT * FROM warehouse_stock WHERE ingredient = @ingredient', {
+                    ['@ingredient'] = fruit
+                }, function(stockResults)
+                    if #stockResults > 0 then
+                        MySQL.Async.execute('UPDATE warehouse_stock SET quantity = quantity + @quantity WHERE ingredient = @ingredient', {
+                            ['@quantity'] = amount,
+                            ['@ingredient'] = fruit
+                        })
+                    else
+                        MySQL.Async.execute('INSERT INTO warehouse_stock (ingredient, quantity) VALUES (@ingredient, @quantity)', {
+                            ['@ingredient'] = fruit,
+                            ['@quantity'] = amount
+                        })
+                    end
+                end)
+
+                local sellMsg = 'Sold ' .. amount .. ' ' .. fruit .. ' for $' .. total
+
+                if Config.Notify == 'qb' then
+                    TriggerClientEvent('QBCore:Notify', src, sellMsg, 'success')
+                else
+                    local data = {
+                        title = 'Sold ' .. amount .. ' ' .. fruit,
+                        description = 'for $' .. total,
+                        type = 'success',
+                        duration = 9000,
+                        position = 'top-right'
+                    }
+                    TriggerClientEvent('ox_lib:notify', src, data)
+                end
+            else
+                print('Failed to add money to player.')
+            end
+        else
+            print('Failed to remove item from player inventory.')
+        end
+    else
+        local errMsg = 'You don\'t have enough ' .. fruit .. 's'
 
         if Config.Notify == 'qb' then
             TriggerClientEvent('QBCore:Notify', src, errMsg, 'error')

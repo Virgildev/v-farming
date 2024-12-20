@@ -1,10 +1,21 @@
 Config = {}
 
+/*
+
+███████╗░█████╗░██████╗░███╗░░░███╗██╗███╗░░██╗░██████╗░
+██╔════╝██╔══██╗██╔══██╗████╗░████║██║████╗░██║██╔════╝░
+█████╗░░███████║██████╔╝██╔████╔██║██║██╔██╗██║██║░░██╗░
+██╔══╝░░██╔══██║██╔══██╗██║╚██╔╝██║██║██║╚████║██║░░╚██╗
+██║░░░░░██║░░██║██║░░██║██║░╚═╝░██║██║██║░╚███║╚██████╔╝
+╚═╝░░░░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚═╝╚═╝░░╚══╝░╚═════╝░
+*/
+
 -- ox_target and qb-target works without any changes
 -- ox_inventory and qb-inventory works without any changes
 Config.Progress = 'ox' -- qb or ox
 Config.Notify = 'ox' -- qb or ox
 Config.Menu = 'ox' -- qb or ox
+Config.useMyResturantWarehouseScript = true -- if you are using v-supplychain-restaurants, false if not (if true will make items sold to the in-game seller, go to the active warehouse stock)
 
 -- Define the ped model (default: a_m_m_farmer_01)
 Config.PedModel = "a_m_m_farmer_01"

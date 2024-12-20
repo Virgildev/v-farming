@@ -1,43 +1,6 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 Citizen.CreateThread(function()
-    for _, fruit in ipairs(Config.FarmingLocations) do
-        for _, target in ipairs(fruit.targets) do
-            exports['qb-target']:AddBoxZone(fruit.label, target.coords, target.radius, target.radius, {
-                name = fruit.label,
-                heading = 0,
-                debugPoly = false,
-                minZ = target.coords.z - 1.0,
-                maxZ = target.coords.z + 1.0,
-            }, {
-                options = {
-                    {
-                        type = "client",
-                        event = "farming:harvest",
-                        icon = "fas fa-hand",
-                        label = "Pick " .. fruit.item,
-                        location = target,
-                        fruit = fruit,
-                    },
-                },
-                distance = 2.0
-            })
-
-            local blip = AddBlipForCoord(target.coords.x, target.coords.y, target.coords.z)
-            SetBlipSprite(blip, fruit.blipSprite)
-            SetBlipDisplay(blip, 4)
-            SetBlipScale(blip, fruit.blipScale)
-            SetBlipColour(blip, fruit.blipColor)
-            SetBlipAsShortRange(blip, true)
-            BeginTextCommandSetBlipName("STRING")
-            AddTextComponentString(fruit.label)
-            EndTextCommandSetBlipName(blip)
-
-        end
-    end
-end)
-
-Citizen.CreateThread(function()
     if SellerBlip then
         RemoveBlip(SellerBlip)
     end
@@ -53,10 +16,43 @@ Citizen.CreateThread(function()
     EndTextCommandSetBlipName(SellerBlip)
 end)
 
+Citizen.CreateThread(function()
+    for _, farm in ipairs(Config.FarmingLocations) do
+        for _, target in ipairs(farm.targets) do
+            exports.ox_target:addBoxZone({
+                coords = target.coords,
+                size = target.size,
+                rotation = target.rotation,
+                debug = false,
+                options = {
+                    {
+                        name = farm.label,
+                        icon = "fas fa-hand",
+                        label = "Pick " .. farm.item,
+                        onSelect = function()
+                            TriggerEvent("farming:harvest", { target = target, farm = farm })
+                        end
+                    }
+                }
+            })
+
+            local blip = AddBlipForCoord(target.coords.x, target.coords.y, target.coords.z)
+            SetBlipSprite(blip, farm.blipSprite)
+            SetBlipDisplay(blip, 4)
+            SetBlipScale(blip, farm.blipScale)
+            SetBlipColour(blip, farm.blipColor)
+            SetBlipAsShortRange(blip, true)
+            BeginTextCommandSetBlipName("STRING")
+            AddTextComponentString(farm.label)
+            EndTextCommandSetBlipName(blip)
+        end
+    end
+end)
+
 RegisterNetEvent('farming:harvest')
 AddEventHandler('farming:harvest', function(data)
-    local target = data.location
-    local fruit = data.fruit.item
+    local target = data.target
+    local fruit = data.farm.item
     local location = nil
 
     for _, farmLocation in ipairs(Config.FarmingLocations) do
@@ -66,13 +62,18 @@ AddEventHandler('farming:harvest', function(data)
         end
     end
 
+    if not location then
+        print('No location found for fruit:', fruit)
+        return
+    end
+    
     local animDict = location.targets[1].animDict 
     local animName = location.targets[1].anim
 
-    for _, target in ipairs(location.targets) do
-        if target.coords == target.coords then
-            animDict = target.animDict
-            animName = target.anim
+    for _, locTarget in ipairs(location.targets) do
+        if locTarget.coords.x == target.coords.x and locTarget.coords.y == target.coords.y and locTarget.coords.z == target.coords.z then
+            animDict = locTarget.animDict
+            animName = locTarget.anim
             break
         end
     end
@@ -89,14 +90,15 @@ AddEventHandler('farming:harvest', function(data)
             flags = 1,
         }, {}, {},
         function()
-            TriggerServerEvent('farming:giveItem', fruit, target.amount)
+            TriggerServerEvent('farming:giveItem', fruit, target.amount, target.coords, target.size, target.rotation)
         end)
     else    
-        if lib.progressBar({
+        if lib.progressCircle({
             duration = Config.PickingProgress,
             label = 'Picking',
             useWhileDead = false,
             canCancel = true,
+            position = 'bottom',
             disable = {
                 car = true,
                 move = true,
@@ -107,7 +109,7 @@ AddEventHandler('farming:harvest', function(data)
                 dict = animDict,
                 clip = animName
             },
-        }) then TriggerServerEvent('farming:giveItem', fruit, target.amount) end
+        }) then TriggerServerEvent('farming:giveItem', fruit, target.amount, target.coords, target.size, target.rotation) end
     end
 end)
 
@@ -147,44 +149,58 @@ end)
 RegisterNetEvent('farming:openFruitMenu')
 AddEventHandler('farming:openFruitMenu', function()
     local fruits = {}
-    
-    if Config.Menu == 'ox' then
-    for fruit, info in pairs(Config.Items) do
-        local menuItem = {
-            title = info.label,
-            description = 'Sell some ' .. info.label .. "'s",
-            icon = 'fas fa-hand',
-            onSelect = function()
-                TriggerEvent('farming:selectFruit', { fruit = fruit })
-            end
-        }
-        table.insert(fruits, menuItem)
-    end
 
-    lib.registerContext({
-        id = 'farming_fruit_menu_ox',
-        title = 'Fruit Salesman',
-        options = fruits
-    })
-
-    lib.showContext('farming_fruit_menu_ox')
-
-    elseif Config.Menu == 'qb' then
-        for fruit, info in pairs(Config.Items) do
-            table.insert(fruits, {
-                header = info.label,
-                txt = 'Sell some ' .. info.label .. "'s",
-                icon = 'fas fa-hand',
-                params = {
-                    event = 'farming:selectFruit',
-                    args = {
-                        fruit = fruit
-                    }
+    local function filterFruits(query)
+        local filteredFruits = {}
+        for fruit, info in pairs(Config.ItemsFarming) do
+            if info.label and string.find(string.lower(info.label), string.lower(query)) then
+                local menuItem = {
+                    title = info.label,
+                    description = 'Sell some ' .. info.label .. "'s",
+                    icon = 'fas fa-hand',
+                    onSelect = function()
+                        TriggerEvent('farming:selectFruit', { fruit = fruit })
+                    end
                 }
-            })
+                table.insert(filteredFruits, menuItem)
+            end
         end
-        exports['qb-menu']:openMenu(fruits)
+        return filteredFruits
     end
+
+    local function createMenu(searchQuery)
+        local options = {}
+
+        table.insert(options, {
+            title = 'Search',
+            description = 'Search for a fruit',
+            icon = 'fas fa-search',
+            onSelect = function()
+                local input = lib.inputDialog('Search Fruits', {
+                    { type = 'input', label = 'Enter fruit name' }
+                })
+
+                if input and input[1] then
+                    createMenu(input[1])
+                end
+            end
+        })
+
+        local filteredFruits = filterFruits(searchQuery or '')
+        for _, menuItem in ipairs(filteredFruits) do
+            table.insert(options, menuItem)
+        end
+
+        lib.registerContext({
+            id = 'farming_fruit_menu_ox',
+            title = 'Fruit Salesman',
+            options = options
+        })
+
+        lib.showContext('farming_fruit_menu_ox')
+    end
+
+    createMenu()
 end)
 
 RegisterNetEvent('farming:selectFruit')
@@ -194,7 +210,7 @@ AddEventHandler('farming:selectFruit', function(data)
     local dialog
     if Config.Menu == 'qb' then
         dialog = exports['qb-input']:ShowInput({
-            header = "Sell " .. Config.Items[fruit].label,
+            header = "Sell " .. Config.ItemsFarming[fruit].label,
             submitText = "Sell",
             inputs = {
                 {
@@ -206,7 +222,7 @@ AddEventHandler('farming:selectFruit', function(data)
             },
         })
     elseif Config.Menu == 'ox' then
-        dialog = lib.inputDialog("Sell " .. Config.Items[fruit].label, {
+        dialog = lib.inputDialog("Sell " .. Config.ItemsFarming[fruit].label, {
             {
                 type = "number",
                 label = "Amount to sell",
@@ -240,10 +256,11 @@ AddEventHandler('farming:selectFruit', function(data)
                     TriggerServerEvent('farming:sellFruit', fruit, amount)
                 end)
             elseif Config.Menu == 'ox' then
-                lib.progressBar({
+                lib.progressCircle({
                     duration = Config.SellProgress,
                     label = 'Selling ' .. fruit,
                     canCancel = false,
+                    position = 'bottom',
                     disable = {
                         car = true,
                         move = true,
