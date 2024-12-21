@@ -17,6 +17,8 @@ Config.Notify = 'ox' -- qb or ox
 Config.Menu = 'ox' -- qb or ox
 Config.useMyResturantWarehouseScript = true -- if you are using v-supplychain-restaurants, false if not (if true will make items sold to the in-game seller, go to the active warehouse stock)
 
+Config.DropPlayerOnExploitCheck = true -- If the player is found trying to exploit server events they will be kicked
+
 -- Define the ped model (default: a_m_m_farmer_01)
 Config.PedModel = "a_m_m_farmer_01"
 
@@ -46,7 +48,7 @@ Config.SellProgress = 10000
 Config.PickingProgress = 8000
 
 -- Purchaser and their prices
-Config.Items = {
+Config.ItemsFarming = {
     ['apple'] = {label = 'Apple', price = 4},
     ['pear'] = {label = 'Pear', price = 4},
     ['cherry'] = {label = 'Cherry', price = 4},

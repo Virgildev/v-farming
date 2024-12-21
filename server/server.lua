@@ -1,4 +1,7 @@
+--ChatGPT. (2024, December 20). Fixing the "Create IsPlayerInRectangularZone and IsPlayerNearTarget methods to ensure player is within zone" error in Lua scripting for FiveM. OpenAI. https://www.openai.com/chatgpt
+--It was being a bitch to me, figured I'd pull out my boy ChatGPT
 local function IsPlayerInRectangularZone(playerCoords, targetCoords, size, rotation)
+    rotation = rotation or 0
     local rad = math.rad(rotation)
     local halfWidth = size.x / 2
     local halfHeight = size.y / 2
@@ -14,6 +17,7 @@ end
 local function IsPlayerNearTarget(src, targetCoords, targetSize, targetRotation)
     local playerCoords = GetEntityCoords(GetPlayerPed(src))
 
+    targetRotation = targetRotation or 0
     return IsPlayerInRectangularZone(playerCoords, targetCoords, targetSize, targetRotation)
 end
 
@@ -53,13 +57,41 @@ AddEventHandler('farming:giveItem', function(item, amount, targetCoords, targetS
             print('Failed to add item to player inventory.')
         end
     else
-        DropPlayer(src, 'Kicked for attempting to exploit: Farming action triggered too far from target.')
+        if Config.DropPlayerOnExploitCheck then
+            DropPlayer(src, 'Sniffed that shit from miles...')
+        end
     end
 end)
 
 RegisterServerEvent('farming:sellFruit')
 AddEventHandler('farming:sellFruit', function(fruit, amount, targetCoords)
     local src = source
+    local playerPed = GetPlayerPed(src)
+    local playerCoords = GetEntityCoords(playerPed)
+
+    local distance = #(playerCoords - Config.Location.coords)
+    if distance > 7.0 then
+        local errMsg = 'You must be within 7 meters of the location to sell fruit.'
+        if Config.Notify == 'qb' then
+            TriggerClientEvent('QBCore:Notify', src, errMsg, 'error')
+            if Config.DropPlayerOnExploitCheck then
+                DropPlayer(src, 'Sniffed that shit from miles...')
+            end
+        else
+            local data = {
+                title = errMsg,
+                type = 'error',
+                duration = 3000,
+                position = 'top-right'
+            }
+            TriggerClientEvent('ox_lib:notify', src, data)
+            if Config.DropPlayerOnExploitCheck then
+                DropPlayer(src, 'Sniffed that shit from miles...')
+            end
+        end
+        return
+    end
+
     local item = exports.ox_inventory:GetItem(src, fruit)
 
     if item and item.count >= amount then
@@ -69,7 +101,7 @@ AddEventHandler('farming:sellFruit', function(fruit, amount, targetCoords)
         local success = exports.ox_inventory:RemoveItem(src, fruit, amount)
 
         if success then
-            local addMoneySuccess = exports.ox_inventory:AddMoney(src, 'cash', total)
+            local addMoneySuccess = exports.ox_inventory:AddItem(src, 'cash', total)
             if addMoneySuccess and Config.useMyResturantWarehouseScript then
                 MySQL.Async.fetchAll('SELECT * FROM warehouse_stock WHERE ingredient = @ingredient', {
                     ['@ingredient'] = fruit

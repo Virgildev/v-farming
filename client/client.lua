@@ -127,29 +127,18 @@ Citizen.CreateThread(function()
     SetEntityInvincible(ped, true)
     SetModelAsNoLongerNeeded(pedModel)
 
-    exports['qb-target']:AddBoxZone('fruit_sell_ped', Config.Location.coords, 2.0, 2.0, {
-        name = 'fruit_sell_ped',
-        heading = Config.Location.heading,
-        debugPoly = false,
-        minZ = 33.0768,
-        maxZ = 35.0768
-    }, {
-        options = {
-            {
-                type = "client",
-                event = "farming:openFruitMenu",
-                icon = "fas fa-shopping-basket",
-                label = "Sell Fruits"
-            },
-        },
-        distance = 2.0
+    exports.ox_target:addLocalEntity(ped, {
+        {
+            type = "client",
+            event = "farming:openFruitMenu",
+            icon = "fas fa-shopping-basket",
+            label = "Sell Fruits"
+        }
     })
 end)
 
 RegisterNetEvent('farming:openFruitMenu')
 AddEventHandler('farming:openFruitMenu', function()
-    local fruits = {}
-
     local function filterFruits(query)
         local filteredFruits = {}
         for fruit, info in pairs(Config.ItemsFarming) do
