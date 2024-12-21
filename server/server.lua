@@ -70,7 +70,7 @@ AddEventHandler('farming:sellFruit', function(fruit, amount, targetCoords)
     local playerCoords = GetEntityCoords(playerPed)
 
     local distance = #(playerCoords - Config.Location.coords)
-    if distance > 7.0 then
+    if distance > 15.0 then
         local errMsg = 'You must be within 7 meters of the location to sell fruit.'
         if Config.Notify == 'qb' then
             TriggerClientEvent('QBCore:Notify', src, errMsg, 'error')
