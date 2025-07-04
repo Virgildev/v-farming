@@ -1,3 +1,5 @@
+# ⚠️ **THIS SCRIPT IS NO LONGER MAINTAINED, USE AT YOUR OWN RISK** ⚠️
+
 # v-farming
 
 A farming script for FiveM servers using QBCore/OX.
